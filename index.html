@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d6a4b">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}@media (prefers-color-scheme: dark){:root{color-scheme:dark}}</style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mastrino">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Mastrino</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: un registro contabile. Fogli bianchi su carta grigio-verde; Dare in inchiostro blu, Avere in inchiostro rosso, come nel libro giornale. Una colonna stretta, barra di navigazione in basso per il telefono. */
+:root{
+  --paper:#eaf0ec; --sheet:#ffffff; --ink:#17211c; --muted:#56675e; --rule:#cfdad3; --rule2:#e4ebe6;
+  --accent:#0d6a4b; --accent-bg:#dcefe5; --on-accent:#ffffff;
+  --dare:#1c4ca3; --dare-bg:#e5ecf9; --avere:#a2213a; --avere-bg:#f8e6e9;
+  --warn:#7f4d00; --warn-bg:#fbefd6; --tip:#22543f; --tip-bg:#e3f1ea;
+  --ok:#0f6e4b; --ok-bg:#d9f0e4; --ko:#ac2539; --ko-bg:#fae3e7;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#101613; --sheet:#18201c; --ink:#e4ebe7; --muted:#97a89f; --rule:#2c3832; --rule2:#222c27;
+  --accent:#57c79b; --accent-bg:#163227; --on-accent:#08130e;
+  --dare:#8fb1f2; --dare-bg:#1a2640; --avere:#f19aaa; --avere-bg:#3a1c24;
+  --warn:#f2bd62; --warn-bg:#352812; --tip:#8fd6b5; --tip-bg:#142b21;
+  --ok:#6ed4a7; --ok-bg:#133024; --ko:#f39aa8; --ko-bg:#3a1a21; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#101613; --sheet:#18201c; --ink:#e4ebe7; --muted:#97a89f; --rule:#2c3832; --rule2:#222c27;
+  --accent:#57c79b; --accent-bg:#163227; --on-accent:#08130e;
+  --dare:#8fb1f2; --dare-bg:#1a2640; --avere:#f19aaa; --avere-bg:#3a1c24;
+  --warn:#f2bd62; --warn-bg:#352812; --tip:#8fd6b5; --tip-bg:#142b21;
+  --ok:#6ed4a7; --ok-bg:#133024; --ko:#f39aa8; --ko-bg:#3a1a21; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans);-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--sheet)}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code,.mono{font-family:var(--mono);font-size:.92em}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--sheet);border-bottom:1px solid var(--rule)}
+.topin{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:.2px}
+.tacc{display:inline-grid;grid-template-columns:1fr 1fr;width:34px;height:26px;border-top:2.5px solid var(--ink);font:700 11px/1 var(--mono);text-align:center;padding-top:5px;position:relative}
+.tacc::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2.5px solid var(--ink)}
+.tacc .d{color:var(--dare)} .tacc .a{color:var(--avere)}
+.sub{font-size:12px;color:var(--muted);text-align:right}
+
+main{padding-block:16px 110px}
+h2{font-size:22px;line-height:1.2;margin:4px 0 4px;text-wrap:balance}
+h3{font-size:17px;margin:0 0 6px;text-wrap:balance}
+h4{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:18px 0 8px}
+p{margin:6px 0}
+.lead{color:var(--muted);margin:0 0 14px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:var(--r);padding:14px 14px 16px;min-width:0}
+ul,ol{margin:6px 0;padding-left:20px} li{margin:3px 0}
+
+/* nav */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--sheet);border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabsin{display:grid;grid-template-columns:repeat(4,1fr);max-width:760px;margin:0 auto;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+.tab{background:none;border:0;padding:9px 4px 10px;font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;border-top:3px solid transparent}
+.tab b{font-size:16px;line-height:1.1;font-weight:600;font-family:var(--mono)}
+.tab[aria-current="true"]{color:var(--accent);border-top-color:var(--accent);font-weight:600}
+
+/* chips & segmented */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--rule2);border-radius:10px;padding:3px;gap:3px;margin-bottom:12px}
+.seg button{border:0;background:none;border-radius:8px;padding:8px 4px;font-size:13.5px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--sheet);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{border:1px solid var(--rule);background:var(--sheet);border-radius:999px;padding:5px 11px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+/* buttons */
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{border:1px solid var(--rule);background:var(--sheet);border-radius:10px;padding:10px 14px;font-weight:600;font-size:14px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.okb{background:var(--ok-bg);border-color:transparent;color:var(--ok)}
+.btn.kob{background:var(--ko-bg);border-color:transparent;color:var(--ko)}
+.btn.sm{padding:6px 10px;font-size:13px}
+
+/* ledger rows */
+.entry{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.elab{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.row{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:start;padding:8px 10px;border-radius:9px;border-left:4px solid}
+.row.rd{background:var(--dare-bg);border-color:var(--dare)}
+.row.ra{background:var(--avere-bg);border-color:var(--avere)}
+.side{font:700 11.5px/1.9 var(--mono);text-transform:uppercase;letter-spacing:.4px}
+.rd .side{color:var(--dare)} .ra .side{color:var(--avere)}
+.rmain{min-width:0}
+.rname{font-weight:600;line-height:1.3}
+.rmeta{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-top:3px;font-size:12.5px;color:var(--muted)}
+.tg{font:700 11px/1 var(--mono);padding:3px 5px;border-radius:4px;background:var(--sheet);color:var(--ink);border:1px solid var(--rule)}
+.tg.tw{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.coll{font-size:12.5px}
+.coll code{font-weight:700;color:var(--ink)}
+.ramt{font:600 14px/1.4 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.tot{display:flex;justify-content:flex-end;gap:14px;font:12px var(--mono);color:var(--muted);padding:2px 4px}
+
+/* callouts */
+.tip,.warn,.key{border-radius:9px;padding:9px 11px;margin:10px 0;font-size:14px}
+.tip{background:var(--tip-bg);color:var(--tip)}
+.warn{background:var(--warn-bg);color:var(--warn)}
+.key{background:var(--accent-bg);color:var(--ink);font-weight:600}
+
+/* variation grid */
+.vg{display:grid;grid-template-columns:auto 1fr 1fr;border:1px solid var(--rule);border-radius:10px;overflow:hidden;font-size:14px;margin:8px 0}
+.vg div{padding:9px 10px;border-top:1px solid var(--rule2)}
+.vg .h{font-weight:700;background:var(--rule2);border-top:0}
+.vg .dd{color:var(--dare);font:700 15px var(--mono)} .vg .aa{color:var(--avere);font:700 15px var(--mono)}
+
+/* tables */
+.tw-x{overflow-x:auto;margin:8px 0}
+table.mt{border-collapse:collapse;width:100%;font-size:13.5px}
+.mt th,.mt td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--rule2);vertical-align:top}
+.mt th{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.mt td.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mt tr.sum td{font-weight:700;border-top:2px solid var(--rule)}
+
+/* accordion */
+details.acc{background:var(--sheet);border:1px solid var(--rule);border-radius:var(--r)}
+details.acc>summary{list-style:none;padding:14px;font-weight:700;font-size:16px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"+";font:400 22px/1 var(--mono);color:var(--muted)}
+details.acc[open]>summary::after{content:"−"}
+details.acc>summary small{display:block;font-weight:400;font-size:13px;color:var(--muted)}
+.accb{padding:0 14px 16px;min-width:0}
+.schema{font-size:14px}
+.schema .L{font-weight:700;margin-top:8px}
+.schema .S{padding-left:14px;color:var(--ink)}
+.schema .S span{color:var(--muted)}
+
+/* codes list */
+.codes{list-style:none;padding:0;display:grid;gap:4px}
+.codes li{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:baseline;margin:0}
+.codes code{font-weight:700}
+
+/* quiz */
+.qtext{font-size:16px;white-space:pre-line}
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.opt{text-align:left;border:1.5px solid var(--rule);background:var(--sheet);border-radius:10px;padding:11px 12px;font-size:14.5px}
+.opt.good{border-color:var(--ok);background:var(--ok-bg);color:var(--ok);font-weight:600}
+.opt.bad{border-color:var(--ko);background:var(--ko-bg);color:var(--ko)}
+.opt:disabled{cursor:default}
+.fb{margin-top:12px;padding:10px 12px;border-radius:10px}
+.fb.ok{background:var(--ok-bg)} .fb.ko{background:var(--ko-bg)}
+.fb b{display:block;margin-bottom:2px}
+.score{font:600 13px var(--mono);color:var(--muted)}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.badge{display:inline-block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);background:var(--accent-bg);border-radius:5px;padding:3px 7px}
+
+/* verifica */
+.vitem{border-top:1px solid var(--rule2);padding:12px 0}
+.vitem:first-of-type{border-top:0}
+.vnum{font:700 13px var(--mono);color:var(--muted);margin-right:6px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-top:10px}
+.tacct{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:10px;min-width:0}
+.tacct h5{margin:0 0 6px;font-size:13.5px;text-align:center}
+.tbody{display:grid;grid-template-columns:1fr 1fr;border-top:2px solid var(--ink);font:12.5px/1.6 var(--mono);font-variant-numeric:tabular-nums}
+.tbody>div{padding:4px 6px;min-width:0}
+.tbody>div:first-child{border-right:2px solid var(--ink)}
+.tbody .hd{font-size:10.5px;text-transform:uppercase;color:var(--muted);font-family:var(--sans);font-weight:700}
+.tbody .ln{display:flex;justify-content:space-between;gap:6px}
+.tbody .ln i{color:var(--muted);font-style:normal}
+.tsal{text-align:center;font:600 12px var(--mono);margin-top:6px;color:var(--muted)}
+
+/* conti */
+.search{width:100%;padding:11px 12px;border:1px solid var(--rule);border-radius:10px;background:var(--sheet);color:var(--ink);font:inherit;margin-bottom:12px}
+.clist{display:flex;flex-direction:column}
+.citem{padding:10px 0;border-top:1px solid var(--rule2)}
+.citem:first-child{border-top:0}
+.citem .cn{font-weight:600}
+.citem .cm{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:13px;color:var(--muted);margin-top:2px}
+.citem .cnote{font-size:13px;color:var(--warn);margin-top:3px}
+.grp{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);font-weight:700;margin:16px 0 2px}
+.small{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.opt,.chip,.btn{transition:background-color .12s,border-color .12s}}
+@media (max-width:420px){.row{grid-template-columns:1fr auto}.side{grid-column:1/-1;line-height:1}.rmain{grid-column:1}.codes li{grid-template-columns:84px 1fr}}
+</style>
+</head>
+<body>
+
+
+<header class="top"><div class="wrap topin">
+  <div class="logo"><span class="tacc" aria-hidden="true"><span class="d">D</span><span class="a">A</span></span>Mastrino</div>
+  <div class="sub">Partita doppia e bilancio<br>ripasso per la verifica</div>
+</div></header>
+<main id="main" class="wrap"></main>
+<nav class="tabs" aria-label="Sezioni"><div class="tabsin">
+  <button class="tab" data-tab="flash"><b>⚡</b>Concetti</button>
+  <button class="tab" data-tab="teoria"><b>§</b>Teoria</button>
+  <button class="tab" data-tab="es"><b>D|A</b>Esercizi</button>
+  <button class="tab" data-tab="conti"><b>C.II.1</b>Conti</button>
+</div></nav>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var fmt=new Intl.NumberFormat('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:true});
+function money(v){var s=fmt.format(v);
+  // forza il punto delle migliaia anche sui numeri a 4 cifre
+  var p=s.split(',');p[0]=p[0].replace(/\./g,'').replace(/\B(?=(\d{3})+(?!\d))/g,'.');return '€ '+p.join(',')}
+var E=money;
+function r2(x){return Math.round(x*100)/100}
+function R(a,b,s){s=s||100;return Math.round((a+Math.random()*(b-a))/s)*s}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+
+/* ============ CONTI ============ */
+var A={
+ merciAcq:{n:'Merci c/acquisti',t:'E',sp:'CE',code:'B.6',voce:'Costi per materie prime, sussidiarie, di consumo e merci',g:'Acquisti e vendite'},
+ merciVen:{n:'Merci c/vendite',t:'E',sp:'CE',code:'A.1',voce:'Ricavi delle vendite e delle prestazioni',g:'Acquisti e vendite'},
+ ivaCred:{n:'IVA a nostro credito',t:'F',sp:'SP',code:'C.II.5-bis',voce:'Crediti tributari',g:'Acquisti e vendite'},
+ ivaDeb:{n:'IVA a nostro debito',t:'F',sp:'SP',pass:1,code:'D.12',voce:'Debiti tributari',g:'Acquisti e vendite'},
+ crediti:{n:'Crediti v/clienti',t:'F',sp:'SP',code:'C.II.1',voce:'Crediti verso clienti',g:'Crediti e debiti'},
+ debiti:{n:'Debiti v/fornitori',t:'F',sp:'SP',pass:1,code:'D.7',voce:'Debiti verso fornitori',g:'Crediti e debiti'},
+ camAtt:{n:'Cambiali attive',t:'F',sp:'SP',code:'C.III.6',voce:'Altri titoli',warn:1,note:'Versione del prof (foglio fatto in classe). Per codice civile e manuali è C.II.1 Crediti verso clienti. In verifica scrivi la sua.',g:'Crediti e debiti'},
+ camPass:{n:'Cambiali passive',t:'F',sp:'SP',pass:1,code:'D.8',voce:'Debiti rappresentati da titoli di credito',warn:1,note:'Alcuni testi le lasciano in D.7 Debiti verso fornitori. Con un prof che mette le cambiali attive tra i "titoli", D.8 è la scelta coerente.',g:'Crediti e debiti'},
+ debitori:{n:'Debitori diversi',t:'F',sp:'SP',code:'C.II.5-quater',voce:'Crediti verso altri',note:'Chi compra un tuo bene strumentale non è un cliente normale: il credito va tra i crediti verso altri.',g:'Crediti e debiti'},
+ banca:{n:'Banca X c/c',t:'F',sp:'SP',code:'C.IV.1',voce:'Depositi bancari e postali',note:'Se il conto è in rosso (saldo Avere) va nel passivo, D.4 Debiti verso banche.',g:'Liquidità'},
+ assegni:{n:'Cassa assegni',t:'F',sp:'SP',code:'C.IV.2',voce:'Assegni',note:'Solo assegni RICEVUTI. Se l’assegno lo emetti tu, il conto è Banca X c/c.',g:'Liquidità'},
+ cassa:{n:'Denaro in cassa',t:'F',sp:'SP',code:'C.IV.3',voce:'Danaro e valori in cassa',g:'Liquidità'},
+ fabbricati:{n:'Fabbricati',t:'E',sp:'SP',code:'B.II.1',voce:'Terreni e fabbricati',g:'Beni strumentali'},
+ macchinari:{n:'Macchinari',t:'E',sp:'SP',code:'B.II.2',voce:'Impianti e macchinario',note:'Conto economico (costo pluriennale, VEN) ma collocato nello SP, tra le immobilizzazioni materiali.',g:'Beni strumentali'},
+ attrezzature:{n:'Attrezzature commerciali',t:'E',sp:'SP',code:'B.II.3',voce:'Attrezzature industriali e commerciali',g:'Beni strumentali'},
+ automezzi:{n:'Automezzi',t:'E',sp:'SP',code:'B.II.4',voce:'Altri beni',g:'Beni strumentali'},
+ arredi:{n:'Mobili e arredi',t:'E',sp:'SP',code:'B.II.4',voce:'Altri beni',g:'Beni strumentali'},
+ brevetti:{n:'Brevetti',t:'E',sp:'SP',code:'B.I.3',voce:'Diritti di brevetto industriale e di utilizzazione delle opere dell’ingegno',g:'Beni strumentali'},
+ fondoAmm:{n:'Fondo ammortamento macchinari',t:'E',sp:'SP',code:'B.II.2',voce:'Impianti e macchinario, in diminuzione',note:'Non va nel passivo: si sottrae dal costo del bene. Nello SP compare il valore netto.',g:'Beni strumentali'},
+ amm:{n:'Ammortamento macchinari',t:'E',sp:'CE',code:'B.10.b',voce:'Ammortamento delle immobilizzazioni materiali',g:'Beni strumentali'},
+ plus:{n:'Plusvalenze',t:'E',sp:'CE',code:'A.5',voce:'Altri ricavi e proventi',g:'Beni strumentali'},
+ minus:{n:'Minusvalenze',t:'E',sp:'CE',code:'B.14',voce:'Oneri diversi di gestione',g:'Beni strumentali'},
+ insoluti:{n:'Crediti insoluti',t:'F',sp:'SP',code:'C.II.1',voce:'Crediti verso clienti',note:'Restano crediti verso clienti: cambia il nome del conto, non la voce di bilancio.',g:'Crediti e insoluti'},
+ fsc:{n:'Fondo svalutazione crediti',t:'E',sp:'SP',code:'C.II.1',voce:'Crediti verso clienti, in diminuzione',note:'Il prof lo chiama anche "fondo rischi su crediti". Non va nel passivo B: si sottrae dai crediti.',g:'Crediti e insoluti'},
+ sval:{n:'Svalutazione crediti',t:'E',sp:'CE',code:'B.10.d',voce:'Svalutazioni dei crediti compresi nell’attivo circolante e delle disponibilità liquide',g:'Crediti e insoluti'},
+ perdite:{n:'Perdite su crediti',t:'E',sp:'CE',code:'B.14',voce:'Oneri diversi di gestione',g:'Crediti e insoluti'},
+ intAtt:{n:'Interessi attivi da clienti',t:'E',sp:'CE',code:'C.16.d',voce:'Proventi diversi dai precedenti',note:'Sono gli interessi di mora per il ritardo.',g:'Crediti e insoluti'},
+ soprAtt:{n:'Sopravvenienze attive',t:'E',sp:'CE',code:'A.5',voce:'Altri ricavi e proventi',g:'Crediti e insoluti'},
+ soprPass:{n:'Sopravvenienze passive',t:'E',sp:'CE',code:'B.14',voce:'Oneri diversi di gestione',g:'Crediti e insoluti'},
+ salari:{n:'Salari e stipendi',t:'E',sp:'CE',code:'B.9.a',voce:'Salari e stipendi',g:'Personale e TFR'},
+ oneri:{n:'Oneri sociali',t:'E',sp:'CE',code:'B.9.b',voce:'Oneri sociali',g:'Personale e TFR'},
+ tfr:{n:'TFR',t:'E',sp:'CE',code:'B.9.c',voce:'Trattamento di fine rapporto',note:'È il costo dell’anno (la quota maturata).',g:'Personale e TFR'},
+ debTfr:{n:'Debiti per TFR',t:'F',sp:'SP',pass:1,code:'C',voce:'Trattamento di fine rapporto di lavoro subordinato',note:'Macroclasse C del passivo, da sola: non sta tra i debiti D.',g:'Personale e TFR'},
+ debPrev:{n:'Debiti v/istituti previdenziali',t:'F',sp:'SP',pass:1,code:'D.13',voce:'Debiti verso istituti di previdenza e di sicurezza sociale',g:'Personale e TFR'},
+ erario:{n:'Erario c/ritenute da versare',t:'F',sp:'SP',pass:1,code:'D.12',voce:'Debiti tributari',g:'Personale e TFR'},
+ personale:{n:'Personale c/retribuzioni',t:'F',sp:'SP',pass:1,code:'D.14',voce:'Altri debiti',g:'Personale e TFR'},
+ personaleLiq:{n:'Personale c/liquidazioni',t:'F',sp:'SP',pass:1,code:'D.14',voce:'Altri debiti',g:'Personale e TFR'},
+ azionisti:{n:'Azionisti c/sottoscrizione',t:'F',sp:'SP',code:'A',voce:'Crediti verso soci per versamenti ancora dovuti',note:'Capitale sottoscritto ma non ancora versato.',g:'Soci e patrimonio netto'},
+ capitale:{n:'Capitale sociale',t:'E',sp:'SP',pass:1,code:'A.I',voce:'Capitale',g:'Soci e patrimonio netto'},
+ riservaLeg:{n:'Riserva legale',t:'E',sp:'SP',pass:1,code:'A.IV',voce:'Riserva legale',g:'Soci e patrimonio netto'},
+ utile:{n:'Utile d’esercizio',t:'E',sp:'SP',pass:1,code:'A.IX',voce:'Utile (perdita) dell’esercizio',g:'Soci e patrimonio netto'},
+ mutui:{n:'Mutui passivi',t:'F',sp:'SP',pass:1,code:'D.4',voce:'Debiti verso banche',g:'Altri conti utili'},
+ servizi:{n:'Costi per servizi (energia, consulenze, pubblicità)',t:'E',sp:'CE',code:'B.7',voce:'Costi per servizi',g:'Altri conti utili'},
+ fitti:{n:'Fitti passivi',t:'E',sp:'CE',code:'B.8',voce:'Costi per godimento di beni di terzi',g:'Altri conti utili'},
+ intPass:{n:'Interessi passivi',t:'E',sp:'CE',code:'C.17',voce:'Interessi e altri oneri finanziari',g:'Altri conti utili'},
+ rimanenze:{n:'Rimanenze di merci',t:'E',sp:'SP',code:'C.I.4',voce:'Prodotti finiti e merci',g:'Altri conti utili'}
+};
+function varOf(k,s){return A[k].t==='F'?(s==='D'?'VFA':'VFP'):(s==='D'?'VEN':'VEP')}
+function collShort(k){var a=A[k];return a.sp==='CE'?'CE '+a.code:'SP '+(a.pass?'passivo ':'attivo ')+a.code}
+function collFull(k){return collShort(k)+' · '+A[k].voce}
+
+/* ============ RENDER RIGHE ============ */
+function rowHTML(k,s,v){var a=A[k];
+ return '<div class="row '+(s==='D'?'rd':'ra')+'"><span class="side">'+(s==='D'?'Dare':'Avere')+'</span>'+
+ '<div class="rmain"><div class="rname">'+a.n+'</div><div class="rmeta"><span class="tg">'+a.t+'</span><span class="tg">'+varOf(k,s)+'</span>'+
+ '<span class="coll">'+(a.sp)+' '+(a.sp==='SP'?(a.pass?'pass. ':'att. '):'')+'<code>'+a.code+'</code> '+a.voce+'</span>'+(a.warn?'<span class="tg tw">vedi nota</span>':'')+'</div></div>'+
+ (v!=null?'<div class="ramt">'+E(v)+'</div>':'<div></div>')+'</div>'}
+function sch(rows,label){var h='<div class="entry">'+(label?'<div class="elab">'+label+'</div>':'');
+ rows.forEach(function(r){h+=rowHTML(r[0],r[1],r.length>2?r[2]:null)});return h+'</div>'}
+function entriesHTML(op){var h='';var warns={};
+ op.e.forEach(function(en){h+=sch(en.r,en.l);var d=0,a=0;en.r.forEach(function(r){if(r[1]==='D')d+=r[2];else a+=r[2];if(A[r[0]].warn)warns[r[0]]=1});
+  h+='<div class="tot"><span>Tot. Dare '+E(r2(d))+'</span><span>Tot. Avere '+E(r2(a))+'</span></div>'});
+ if(op.n)h+='<p class="tip">'+op.n+'</p>';
+ Object.keys(warns).forEach(function(k){h+='<p class="warn"><b>'+A[k].n+':</b> '+A[k].note+'</p>'});
+ return h}
+
+/* ============ GENERATORI DI OPERAZIONI ============ */
+var FORN=['Alfa srl','Beta spa','Gamma snc','Delta srl','Rossi & C. snc','Verdi spa','Lombarda srl'];
+var CLI=['Bianchi srl','Neri spa','Galli snc','Moretti srl','Conti spa','Ferri srl','Colombo snc'];
+var PAG=[
+ {m:'in contanti',k:'cassa'},
+ {m:'con bonifico bancario',k:'banca'},
+ {m:'emettendo un assegno bancario',k:'banca',n:'L’assegno che emetti tu fa uscire soldi dal conto corrente: è Banca X c/c, non Cassa assegni.'},
+ {m:'emettendo un pagherò (cambiale)',k:'camPass'},
+ {m:'accettando una cambiale tratta emessa dal fornitore',k:'camPass'},
+ {m:'girandogli una cambiale ricevuta da un cliente',k:'camAtt',n:'Giri una cambiale che avevi in portafoglio: esce dalle Cambiali attive.'},
+ {m:'girandogli un assegno ricevuto da un cliente',k:'assegni',n:'L’assegno era tuo perché l’avevi ricevuto: esce da Cassa assegni.'}
+];
+var INC=[
+ {m:'in contanti',k:'cassa'},
+ {m:'con bonifico bancario',k:'banca'},
+ {m:'con un assegno bancario',k:'assegni'},
+ {m:'con un assegno circolare',k:'assegni'},
+ {m:'rilasciando un pagherò (cambiale)',k:'camAtt'},
+ {m:'accettando una cambiale tratta',k:'camAtt'}
+];
+var BENI=[{k:'macchinari',d:'un macchinario'},{k:'attrezzature',d:'attrezzature commerciali'},{k:'automezzi',d:'un furgone'},{k:'arredi',d:'mobili per l’ufficio'}];
+var CAT={av:'Acquisti e vendite',reg:'Pagamenti e incassi',ben:'Beni strumentali',cred:'Crediti e insoluti',pers:'Personale e TFR',soci:'Soci'};
+
+var G={
+ acquisto:function(){var x=R(1000,15000),iva=r2(x*.22);return{cat:'av',t:'Acquisto di merci',
+  q:'Acquistate merci da '+pick(FORN)+' per '+E(x)+' + IVA 22%, pagamento a 60 giorni.',
+  e:[{r:[['merciAcq','D',x],['ivaCred','D',iva],['debiti','A',r2(x+iva)]]}],
+  n:'IVA = '+E(x)+' × 22% = '+E(iva)+'. Il debito verso il fornitore è il totale fattura.'}},
+ vendita:function(){var x=R(1000,15000),iva=r2(x*.22);return{cat:'av',t:'Vendita di merci',
+  q:'Vendute merci a '+pick(CLI)+' per '+E(x)+' + IVA 22%, regolamento a 30 giorni.',
+  e:[{r:[['crediti','D',r2(x+iva)],['merciVen','A',x],['ivaDeb','A',iva]]}],
+  n:'Il credito verso il cliente è il totale fattura; il ricavo è solo l’imponibile.'}},
+ pagamento:function(){var m=pick(PAG),tot=r2(R(1000,12000)*1.22);return{cat:'reg',t:'Pagamento a un fornitore',
+  q:'Si salda la fattura di '+E(tot)+' del fornitore '+pick(FORN)+' '+m.m+'.',
+  e:[{r:[['debiti','D',tot],[m.k,'A',tot]]}],
+  n:m.n||'Quando paghi un fornitore, Debiti v/fornitori va sempre in Dare (il debito si chiude: VFA).'}},
+ incasso:function(){var m=pick(INC),tot=r2(R(1000,12000)*1.22);return{cat:'reg',t:'Incasso da un cliente',
+  q:'Il cliente '+pick(CLI)+' salda la fattura di '+E(tot)+' '+m.m+'.',
+  e:[{r:[[m.k,'D',tot],['crediti','A',tot]]}],
+  n:'Quando incassi da un cliente, Crediti v/clienti va sempre in Avere (il credito si chiude: VFP).'}},
+ versamento:function(){var x=r2(R(1000,9000)*1.22);return{cat:'reg',t:'Versamento di assegni in banca',
+  q:'Si versano sul conto corrente assegni ricevuti dai clienti per '+E(x)+'.',
+  e:[{r:[['banca','D',x],['assegni','A',x]]}],n:'Due conti finanziari: aumenta la banca (VFA), escono gli assegni (VFP).'}},
+ beneAcq:function(){var b=pick(BENI),x=R(5000,60000,500),iva=r2(x*.22);return{cat:'ben',t:'Acquisto di un bene strumentale',
+  q:'Acquistato '+b.d+' da '+pick(FORN)+' per '+E(x)+' + IVA 22%, pagamento a 30 giorni.',
+  e:[{r:[[b.k,'D',x],['ivaCred','D',iva],['debiti','A',r2(x+iva)]]}],
+  n:'Il bene è un conto economico (VEN) perché è un costo che dura più anni, ma in bilancio va nello SP tra le immobilizzazioni materiali.'}},
+ amm:function(){var C=R(10000,90000,1000),p=pick([10,12,15,20,25]),q=r2(C*p/100);return{cat:'ben',t:'Ammortamento',
+  q:'31/12: si ammortizza il macchinario, costo storico '+E(C)+', aliquota '+p+'%.',
+  e:[{r:[['amm','D',q],['fondoAmm','A',q]]}],
+  n:'Quota = costo storico × aliquota = '+E(C)+' × '+p+'% = '+E(q)+'.'}},
+ cessione:function(){var C=R(10000,60000,1000),F=Math.round(C*(0.4+Math.random()*0.45)/100)*100,VC=C-F;
+  var d=Math.round(VC*(Math.random()*0.8-0.4)/100)*100;if(d===0)d=pick([200,-200,300,-300]);if(VC+d<=0)d=Math.abs(d);
+  var P=VC+d,iva=r2(P*.22),pl=d>0,ad=Math.abs(d);
+  return{cat:'ben',t:'Cessione di un bene strumentale',
+  q:'Si vende un macchinario a '+pick(CLI)+': costo storico '+E(C)+', fondo ammortamento '+E(F)+'. Prezzo '+E(P)+' + IVA 22%, regolamento a 30 giorni.',
+  e:[{l:'1 · Cessione',r:[['debitori','D',r2(P+iva)],['macchinari','A',P],['ivaDeb','A',iva]]},
+     {l:'2 · Storno del fondo',r:[['fondoAmm','D',F],['macchinari','A',F]]},
+     {l:pl?'3 · Plusvalenza':'3 · Minusvalenza',r:pl?[['macchinari','D',ad],['plus','A',ad]]:[['minus','D',ad],['macchinari','A',ad]]}],
+  n:'Valore contabile = '+E(C)+' − '+E(F)+' = '+E(VC)+'. Prezzo − valore contabile = '+E(P)+' − '+E(VC)+' = '+(pl?'+':'−')+E(ad)+', quindi '+(pl?'plusvalenza':'minusvalenza')+'. Controllo: dopo le 3 scritture il conto Macchinari fa zero.'}},
+ insoluto:function(){var x=r2(R(2000,15000)*1.22);return{cat:'cred',t:'Credito insoluto',
+  q:'Alla scadenza il cliente '+pick(CLI)+' non paga la fattura di '+E(x)+'.',
+  e:[{r:[['insoluti','D',x],['crediti','A',x]]}],n:'Giroconto: il credito non sparisce, cambia conto per evidenziare che è scaduto. In bilancio resta in C.II.1.'}},
+ insolutoParz:function(){var tot=R(3000,15000,100),inc=R(500,tot*0.5,100),res=r2(tot-inc);return{cat:'cred',t:'Incasso parziale e insoluto',
+  q:'Il cliente '+pick(CLI)+' deve '+E(tot)+'. Alla scadenza paga '+E(inc)+' con bonifico; il resto non viene pagato.',
+  e:[{l:'1 · Incasso parziale',r:[['banca','D',inc],['crediti','A',inc]]},{l:'2 · Giroconto del residuo',r:[['insoluti','D',res],['crediti','A',res]]}],
+  n:'Residuo insoluto = '+E(tot)+' − '+E(inc)+' = '+E(res)+'.'}},
+ mora:function(){var I=r2(R(2000,15000,10)),m=r2(I*pick([.008,.01,.012,.015]));return{cat:'cred',t:'Incasso di un insoluto con interessi di mora',
+  q:'Il cliente '+pick(CLI)+' salda con bonifico il credito insoluto di '+E(I)+', più '+E(m)+' di interessi di mora.',
+  e:[{r:[['banca','D',r2(I+m)],['intAtt','A',m],['insoluti','A',I]]}],n:'Gli interessi di mora sono un ricavo in più: Avere, VEP, CE C.16.d.'}},
+ perdita:function(){var v=pick([1,2,3]),I=r2(R(4000,20000,10)),c=pick(CLI);
+  if(v===1){var inc=Math.round(I*pick([.3,.4,.5,.6])/10)*10;return{cat:'cred',t:'Insoluto in parte irrecuperabile (senza fondo)',
+   q:'Il cliente '+c+', fallito, paga con assegno '+E(inc)+' sul credito insoluto di '+E(I)+'; il resto è perso. Non c’è un fondo svalutazione crediti.',
+   e:[{r:[['assegni','D',inc],['perdite','D',r2(I-inc)],['insoluti','A',I]]}],n:'Perdita = '+E(I)+' − '+E(inc)+' = '+E(r2(I-inc))+'. Senza fondo, tutta la quota persa è un costo: Perdite su crediti (B.14).'}}
+  if(v===2){var F=r2(I+R(1000,6000));return{cat:'cred',t:'Insoluto irrecuperabile, fondo sufficiente',
+   q:'Il credito insoluto di '+E(I)+' verso '+c+' (sorto l’anno scorso) è definitivamente irrecuperabile. Il fondo svalutazione crediti è di '+E(F)+'.',
+   e:[{r:[['fsc','D',I],['insoluti','A',I]]}],n:'Il fondo copre tutta la perdita: niente Perdite su crediti. Il costo era già stato rilevato quando si è accantonato il fondo.'}}
+  var F2=Math.round(I*pick([.3,.5,.7])/10)*10;return{cat:'cred',t:'Insoluto irrecuperabile, fondo insufficiente',
+   q:'Il credito insoluto di '+E(I)+' verso '+c+' (sorto l’anno scorso) è definitivamente irrecuperabile. Il fondo svalutazione crediti è di '+E(F2)+'.',
+   e:[{r:[['fsc','D',F2],['perdite','D',r2(I-F2)],['insoluti','A',I]]}],n:'Prima si usa tutto il fondo ('+E(F2)+'), la parte scoperta ('+E(r2(I-F2))+') va in Perdite su crediti.'}},
+ accantonamento:function(){var T=R(40000,250000,1000),p=pick([1,2,3,4,5]),s=r2(T*p/100);return{cat:'cred',t:'Accantonamento al fondo svalutazione crediti',
+  q:'31/12: i crediti v/clienti sono '+E(T)+'. Si stima che il '+p+'% non verrà incassato.',
+  e:[{r:[['sval','D',s],['fsc','A',s]]}],n:'Accantonamento = '+E(T)+' × '+p+'% = '+E(s)+'. Il costo va in CE B.10.d; il fondo si sottrae dai crediti in C.II.1.'}},
+ soprAtt:function(){var x=r2(R(500,5000,10));return{cat:'cred',t:'Sopravvenienza attiva',
+  q:'Si incassano con bonifico '+E(x)+' da un cliente il cui credito era stato eliminato come perdita lo scorso anno.',
+  e:[{r:[['banca','D',x],['soprAtt','A',x]]}],n:'Il credito non c’è più in contabilità: non puoi chiudere Crediti insoluti. È un ricavo inatteso legato al passato: Sopravvenienze attive, CE A.5.'}},
+ retribuzioni:function(){var L=R(10000,40000,100),c=r2(L*.0919),ir=Math.round(L*pick([.17,.19,.21])/10)*10,net=r2(L-c-ir);return{cat:'pers',t:'Liquidazione degli stipendi',
+  q:'Fine mese: retribuzioni lorde '+E(L)+', contributi a carico dei dipendenti '+E(c)+' (9,19%), ritenute IRPEF '+E(ir)+'.',
+  e:[{r:[['salari','D',L],['debPrev','A',c],['erario','A',ir],['personale','A',net]]}],
+  n:'Netto = '+E(L)+' − '+E(c)+' − '+E(ir)+' = '+E(net)+'. Il costo per l’azienda è il lordo.'}},
+ oneri:function(){var L=R(10000,40000,100),o=r2(L*.30);return{cat:'pers',t:'Contributi a carico dell’azienda',
+  q:'Sugli stipendi lordi del mese ('+E(L)+') si rilevano i contributi INPS a carico dell’azienda: '+E(o)+'.',
+  e:[{r:[['oneri','D',o],['debPrev','A',o]]}],n:'Sono un costo in più rispetto al lordo: CE B.9.b. Il debito verso l’INPS si paga con F24.'}},
+ pagStip:function(){var x=r2(R(8000,30000,10));return{cat:'pers',t:'Pagamento degli stipendi netti',
+  q:'Si pagano con bonifico gli stipendi netti del mese: '+E(x)+'.',
+  e:[{r:[['personale','D',x],['banca','A',x]]}],n:'Si chiude il debito verso i dipendenti (VFA) ed escono soldi dalla banca (VFP).'}},
+ f24:function(){var c=r2(R(1000,4000,10)),o=r2(R(3000,10000,10)),ir=r2(R(2000,7000,10));return{cat:'pers',t:'Versamento con F24',
+  q:'Il 16 del mese successivo si versano con F24 (addebito in banca) contributi INPS per '+E(r2(c+o))+' e ritenute IRPEF per '+E(ir)+'.',
+  e:[{r:[['debPrev','D',r2(c+o)],['erario','D',ir],['banca','A',r2(c+o+ir)]]}],n:'I contributi comprendono sia la parte del dipendente sia quella dell’azienda: stanno tutti in Debiti v/istituti previdenziali.'}},
+ tfrAcc:function(){var S=R(60000,400000,1000),q=r2(S/13.5);return{cat:'pers',t:'Accantonamento TFR',
+  q:'31/12: si rileva la quota di TFR maturata nell’anno. Retribuzioni annue lorde: '+E(S)+'.',
+  e:[{r:[['tfr','D',q],['debTfr','A',q]]}],n:'Quota = retribuzioni ÷ 13,5 = '+E(S)+' ÷ 13,5 = '+E(q)+'. Debiti per TFR va nel passivo C.'}},
+ tfrLiq:function(){var T=r2(R(5000,30000,10)),rit=Math.round(T*.23/10)*10,net=r2(T-rit);return{cat:'pers',t:'Liquidazione del TFR',
+  q:'Un dipendente si dimette. TFR maturato e già accantonato: '+E(T)+'; ritenute IRPEF '+E(rit)+'. Il netto gli viene pagato con bonifico.',
+  e:[{l:'1 · Liquidazione',r:[['debTfr','D',T],['erario','A',rit],['personaleLiq','A',net]]},{l:'2 · Pagamento',r:[['personaleLiq','D',net],['banca','A',net]]}],
+  n:'Netto = '+E(T)+' − '+E(rit)+' = '+E(net)+'. Se se ne va a metà anno, la quota dell’anno in corso va anche in Dare nel conto TFR (costo).'}},
+ soci:function(){var K=R(100000,500000,10000),p=pick([25,30,40,50]),v=r2(K*p/100);return{cat:'soci',t:'Costituzione di una spa',
+  q:'Costituita la Alfa spa: capitale sociale '+E(K)+', interamente sottoscritto. Gli azionisti versano subito in banca il '+p+'%.',
+  e:[{l:'1 · Sottoscrizione',r:[['azionisti','D',K],['capitale','A',K]]},{l:'2 · Versamento',r:[['banca','D',v],['azionisti','A',v]]}],
+  n:'Restano da versare '+E(r2(K-v))+': nello SP vanno nell’attivo A, Crediti verso soci per versamenti ancora dovuti.'}}
+};
+var GEN={av:['acquisto','vendita'],reg:['pagamento','incasso','versamento'],ben:['beneAcq','amm','cessione'],cred:['insoluto','insolutoParz','mora','perdita','accantonamento','soprAtt'],pers:['retribuzioni','oneri','pagStip','f24','tfrAcc','tfrLiq'],soci:['soci']};
+var W={av:1,reg:2,ben:3,cred:3,pers:3,soci:1};
+function genOp(cat){if(cat==='all'){var bag=[];Object.keys(W).forEach(function(c){for(var i=0;i<W[c];i++)bag.push(c)});cat=pick(bag)}
+ return G[pick(GEN[cat])]()}
+
+/* ============ QUIZ ============ */
+var TEO=[
+ {q:'Da quali documenti è formato il bilancio d’esercizio (art. 2423)?',a:'Stato patrimoniale, conto economico, rendiconto finanziario e nota integrativa',w:['Stato patrimoniale, conto economico e relazione sulla gestione','Stato patrimoniale, conto economico, libro giornale e mastrini','Solo stato patrimoniale e conto economico'],x:'La relazione sulla gestione accompagna il bilancio ma non ne fa parte.'},
+ {q:'Che forma ha lo stato patrimoniale (art. 2424)?',a:'A sezioni contrapposte: attivo e passivo',w:['Scalare, dai ricavi all’utile','A sezioni divise e contrapposte con costi e ricavi','Libera, la sceglie l’azienda'],x:'Il CE invece è in forma scalare (art. 2425).'},
+ {q:'Che forma ha il conto economico (art. 2425)?',a:'Scalare: si parte dal valore della produzione e si arriva all’utile',w:['A sezioni contrapposte: costi a sinistra, ricavi a destra','A mastrini','A sezioni contrapposte: attivo e passivo'],x:'A − B è il risultato della gestione caratteristica; poi si aggiungono C, D e le imposte.'},
+ {q:'Quali sono le macroclassi dell’attivo dello SP?',a:'A Crediti v/soci, B Immobilizzazioni, C Attivo circolante, D Ratei e risconti',w:['A Patrimonio netto, B Fondi, C TFR, D Debiti, E Ratei e risconti','A Immobilizzazioni, B Attivo circolante, C Disponibilità liquide','A Valore della produzione, B Costi della produzione'],x:'Il passivo invece: A PN, B Fondi per rischi e oneri, C TFR, D Debiti, E Ratei e risconti.'},
+ {q:'Quali sono le macroclassi del passivo dello SP?',a:'A Patrimonio netto, B Fondi per rischi e oneri, C TFR, D Debiti, E Ratei e risconti',w:['A Crediti v/soci, B Immobilizzazioni, C Attivo circolante, D Ratei e risconti','A Capitale, B Riserve, C Utile, D Debiti','A Debiti, B Fondi, C Patrimonio netto'],x:'Il TFR ha una macroclasse tutta sua (C), separata dai debiti (D).'},
+ {q:'Dove va il fondo ammortamento nel bilancio?',a:'Si sottrae dal bene, tra le immobilizzazioni (valore netto)',w:['Nel passivo, tra i fondi per rischi e oneri (B)','Nel conto economico, B.10.b','Nel patrimonio netto'],x:'Il bilancio espone i beni al netto dei fondi; il dettaglio va in nota integrativa.'},
+ {q:'Dove va il fondo svalutazione crediti (fondo rischi su crediti)?',a:'Si sottrae dai crediti verso clienti, C.II.1',w:['Nel passivo B.4, altri fondi','Nel passivo D.14, altri debiti','Nel CE B.10.d'],x:'Nel CE B.10.d va la svalutazione (il costo), non il fondo.'},
+ {q:'Dove si indicano i movimenti delle immobilizzazioni dell’anno (acquisti, cessioni, ammortamenti)?',a:'Nella nota integrativa (art. 2427 n. 2)',w:['Nella relazione sulla gestione','Nel rendiconto finanziario','Nello stato patrimoniale, voce per voce'],x:'Per ogni voce: costo, ammortamenti precedenti, acquisizioni, alienazioni, ammortamenti dell’anno.'},
+ {q:'Quali sono i limiti per il bilancio in forma abbreviata (art. 2435-bis, valori in vigore)?',a:'Attivo 5.500.000 €, ricavi 11.000.000 €, 50 dipendenti: non superarne 2 su 3',w:['Attivo 220.000 €, ricavi 440.000 €, 5 dipendenti','Attivo 4.400.000 €, ricavi 8.800.000 €, 50 dipendenti: non superarli tutti e 3','Ricavi sotto 1.000.000 € e meno di 10 dipendenti'],x:'Fino al 2023 erano 4.400.000 e 8.800.000: se il libro ha quei numeri, il prof userà quelli. 220.000 / 440.000 / 5 sono le micro-imprese.'},
+ {q:'Quale documento può non redigere chi fa il bilancio abbreviato?',a:'Il rendiconto finanziario',w:['La nota integrativa','Il conto economico','Lo stato patrimoniale'],x:'L’abbreviato ha anche SP ridotto (solo lettere maiuscole e numeri romani), CE con voci raggruppate e nota integrativa semplificata.'},
+ {q:'Nel bilancio abbreviato, lo stato patrimoniale contiene…',a:'Solo le voci con lettere maiuscole e numeri romani',w:['Solo le macroclassi con lettere maiuscole','Tutte le voci, come l’ordinario','Solo il totale attivo e il totale passivo'],x:'Crediti (C.II) e debiti (D) devono però indicare a parte gli importi esigibili oltre l’esercizio successivo.'},
+ {q:'Le micro-imprese (art. 2435-ter) sono esonerate da…',a:'Rendiconto finanziario e nota integrativa (con alcune info in calce allo SP) e relazione sulla gestione',w:['Stato patrimoniale','Conto economico','Solo dal deposito del bilancio'],x:'Limiti micro in vigore: attivo 220.000 €, ricavi 440.000 €, 5 dipendenti.'},
+ {q:'Dove va la parte di capitale sottoscritta dai soci ma non ancora versata?',a:'SP attivo A, Crediti verso soci per versamenti ancora dovuti',w:['SP attivo C.II.5-quater, Crediti verso altri','SP passivo A.I, Capitale','SP passivo D.3, Debiti verso soci'],x:'È la prima voce dell’attivo.'},
+ {q:'Dopo il 2016, dove sono finiti plusvalenze, minusvalenze e sopravvenienze?',a:'In A.5 (positivi) e B.14 (negativi), perché la sezione E straordinaria è stata abolita',w:['Nella sezione E, proventi e oneri straordinari','In C.16 e C.17','Nel patrimonio netto'],x:'Il D.Lgs. 139/2015 ha eliminato la macroclasse E del conto economico.'},
+ {q:'Il valore contabile di un bene strumentale è…',a:'Costo storico − fondo ammortamento',w:['Costo storico + fondo ammortamento','Prezzo di vendita − costo storico','Quota di ammortamento × anni'],x:'Si confronta con il prezzo di vendita per trovare plus o minusvalenza.'},
+ {q:'Come si calcola la quota annua di TFR?',a:'Retribuzione annua ÷ 13,5',w:['Retribuzione annua ÷ 12','Retribuzione annua × 9,19%','Retribuzione mensile × 13'],x:'In più, il TFR già maturato si rivaluta ogni anno (1,5% + 75% dell’inflazione).'},
+ {q:'Il bilancio deve rappresentare la situazione dell’azienda in modo…',a:'Chiaro, veritiero e corretto',w:['Prudente e riservato','Sintetico e libero','Ottimistico ma documentato'],x:'Art. 2423, comma 2.'},
+ {q:'Come si legge un codice come C.II.1?',a:'Macroclasse C, classe II (numero romano), voce 1 (numero arabo)',w:['Conto C, pagina 2, riga 1','Credito di classe 2 con scadenza 1 anno','Codice del piano dei conti dell’azienda'],x:'Ordine: lettere maiuscole, numeri romani, numeri arabi, lettere minuscole (es. B.9.a).'},
+ {q:'Un conto Banca c/c in rosso (saldo Avere) in bilancio va…',a:'Nel passivo, D.4 Debiti verso banche',w:['Nell’attivo C.IV.1 con il segno meno','Nel passivo B, fondi','Nel CE C.17'],x:'Se il saldo è Dare (soldi sul conto) è attivo C.IV.1 Depositi bancari.'},
+ {q:'Nella sezione D del passivo, cosa va indicato a parte per ogni voce?',a:'L’importo esigibile oltre l’esercizio successivo',w:['L’IVA compresa','Il nome del creditore','Gli interessi già pagati'],x:'Stessa regola per i crediti dell’attivo C.II.'},
+ {q:'Nel CE, cosa rappresenta la differenza A − B?',a:'Il risultato della gestione caratteristica (differenza tra valore e costi della produzione)',w:['L’utile d’esercizio','Il risultato finanziario','Il patrimonio netto'],x:'Dopo vengono C (finanziaria), D (rettifiche finanziarie), imposte (20) e utile (21).'},
+ {q:'Un brevetto acquistato si colloca in…',a:'SP attivo B.I.3, tra le immobilizzazioni immateriali',w:['SP attivo B.II.4, Altri beni','CE B.7, Costi per servizi','SP attivo C.III.6, Altri titoli'],x:'B.I immateriali, B.II materiali, B.III finanziarie.'}
+];
+var QT={mix:'Misto',coll:'Collocazione',var:'Dare/Avere + variazione',tipo:'F o E',calc:'Calcoli',teo:'Teoria bilancio'};
+function qColl(){var keys=Object.keys(A);var k=pick(keys);var right=collFull(k);var pool=shuffle(keys.filter(function(x){return collFull(x)!==right}));var w=[];
+ pool.forEach(function(x){var l=collFull(x);if(w.length<3&&w.indexOf(l)<0)w.push(l)});
+ // distrattore vicino: stesso codice nell'altra sezione o stessa lettera
+ return{q:'Dove si colloca «'+A[k].n+'» nel bilancio?',o:shuffle([{t:right,ok:1}].concat(w.map(function(t){return{t:t}}))),x:(A[k].note||'')}}
+function qTipo(){var k=pick(Object.keys(A));var F=A[k].t==='F';
+ return{q:'«'+A[k].n+'» è un conto…',o:[{t:'Finanziario (F)',ok:F?1:0},{t:'Economico (E)',ok:F?0:1}],
+  x:F?'Riguarda denaro, crediti o debiti.':'È un costo, un ricavo, un bene strumentale, un fondo di rettifica o una voce del patrimonio netto.'}}
+function qVar(){var op=genOp('all');var rows=[];op.e.forEach(function(en){en.r.forEach(function(r){rows.push(r)})});var r=pick(rows);
+ var right=(r[1]==='D'?'Dare':'Avere')+' · '+varOf(r[0],r[1]);
+ return{q:op.q+'\n\nIl conto «'+A[r[0]].n+'» va in…',o:['Dare · VFA','Dare · VEN','Avere · VFP','Avere · VEP'].map(function(t){return{t:t,ok:t===right?1:0}}),xh:entriesHTML(op)}}
+function uniq(o){var s={};return o.every(function(x){if(s[x.t])return false;s[x.t]=1;return true})}
+function qCalc(){var t=pick(['iva','amm','plus','netto','tfr','fondo','tot']);var q,o,x;
+ if(t==='iva'){var v=R(1000,20000);q='IVA 22% su un imponibile di '+E(v)+'?';o=[{t:E(r2(v*.22)),ok:1},{t:E(r2(v*1.22))},{t:E(r2(v*.2))},{t:E(r2(v*.022))}];x='Imponibile × 0,22.'}
+ if(t==='tot'){var v2=R(1000,20000);q='Totale fattura di merci per '+E(v2)+' + IVA 22%?';o=[{t:E(r2(v2*1.22)),ok:1},{t:E(r2(v2*.22))},{t:E(r2(v2*1.2))},{t:E(r2(v2+22))}];x='Imponibile × 1,22.'}
+ if(t==='amm'){var C=R(10000,90000,1000),p=pick([10,12,15,20,25]);q='Quota di ammortamento: costo storico '+E(C)+', aliquota '+p+'%?';o=[{t:E(r2(C*p/100)),ok:1},{t:E(r2(C*(100-p)/100))},{t:E(r2(C/p))},{t:E(r2(C*p/1000))}];x='Costo storico × aliquota.'}
+ if(t==='plus'){var C2=R(10000,60000,1000),F=Math.round(C2*.6/100)*100,VC=C2-F,d=pick([-1,1])*R(500,3000,100);if(VC+d<=0)d=Math.abs(d);var P=VC+d;
+  q='Costo storico '+E(C2)+', fondo ammortamento '+E(F)+', prezzo di vendita '+E(P)+'. Risultato?';
+  o=[{t:(d>0?'Plusvalenza di ':'Minusvalenza di ')+E(Math.abs(d)),ok:1},{t:(d>0?'Minusvalenza di ':'Plusvalenza di ')+E(Math.abs(d))},{t:'Minusvalenza di '+E(Math.abs(C2-P))},{t:'Plusvalenza di '+E(Math.abs(P-F))}];
+  x='Valore contabile = '+E(C2)+' − '+E(F)+' = '+E(VC)+'; '+E(P)+' − '+E(VC)+' = '+(d>0?'+':'−')+E(Math.abs(d))+'.'}
+ if(t==='netto'){var L=R(1500,3000,10),c=r2(L*.0919),ir=Math.round(L*.18/10)*10;q='Lordo '+E(L)+', contributi del dipendente '+E(c)+', IRPEF '+E(ir)+'. Netto?';
+  o=[{t:E(r2(L-c-ir)),ok:1},{t:E(r2(L-c))},{t:E(r2(L-ir))},{t:E(r2(L+c-ir))}];x='Lordo − contributi − ritenute.'}
+ if(t==='tfr'){var S=R(27000,270000,2700);q='Retribuzioni annue '+E(S)+'. Quota TFR dell’anno?';o=[{t:E(r2(S/13.5)),ok:1},{t:E(r2(S/12))},{t:E(r2(S/13))},{t:E(r2(S*.0919))}];x='Retribuzioni ÷ 13,5.'}
+ if(t==='fondo'){var I=R(5000,20000,100),Fo=Math.round(I*.4/100)*100;q='Insoluto irrecuperabile di '+E(I)+', fondo svalutazione crediti '+E(Fo)+'. Quanto va in Perdite su crediti?';
+  o=[{t:E(r2(I-Fo)),ok:1},{t:E(I)},{t:E(Fo)},{t:E(r2(I+Fo))}];x='Prima si usa il fondo; la parte scoperta è la perdita.'}
+ if(!uniq(o))return qCalc();return{q:q,o:shuffle(o),x:x}}
+function qTeo(){var t=pick(TEO);return{q:t.q,o:shuffle([{t:t.a,ok:1}].concat(t.w.map(function(w){return{t:w}}))),x:t.x}}
+function genQ(type){if(type==='mix')type=pick(['coll','coll','var','var','var','tipo','calc','calc','teo','teo']);
+ return({coll:qColl,tipo:qTipo,var:qVar,calc:qCalc,teo:qTeo})[type]()}
+
+/* ============ VERIFICA SIMULATA ============ */
+var PLAN=[['acquisto'],['vendita'],['pagamento'],['incasso','versamento'],['pagamento','incasso'],['beneAcq'],['amm'],['cessione'],['insoluto','insolutoParz'],['mora'],['perdita'],['accantonamento','soprAtt'],['retribuzioni'],['oneri','pagStip','f24'],['tfrAcc','tfrLiq']];
+function genVer(){return PLAN.map(function(a){return G[pick(a)]()})}
+function mastriniHTML(ops){var acc={},order=[];
+ ops.forEach(function(op,i){op.e.forEach(function(en){en.r.forEach(function(r){if(!acc[r[0]]){acc[r[0]]={D:[],A:[]};order.push(r[0])}acc[r[0]][r[1]].push([i+1,r[2]])})})});
+ var h='<div class="tgrid">';order.forEach(function(k){var a=acc[k],sd=0,sa=0;
+  function col(arr){return arr.map(function(x){return '<div class="ln"><i>'+x[0]+')</i><span>'+fmt2(x[1])+'</span></div>'}).join('')}
+  a.D.forEach(function(x){sd+=x[1]});a.A.forEach(function(x){sa+=x[1]});var s=r2(sd-sa);
+  h+='<div class="tacct"><h5>'+A[k].n+'</h5><div class="tbody"><div><div class="hd">Dare</div>'+col(a.D)+'</div><div><div class="hd">Avere</div>'+col(a.A)+'</div></div>'+
+   '<div class="tsal">'+(s===0?'saldo zero':(s>0?'saldo Dare ':'saldo Avere ')+E(Math.abs(s)))+'</div></div>'});
+ return h+'</div>'}
+function fmt2(v){return E(v).replace('€ ','')}
+
+/* ============ STATO ============ */
+var KEY='mastrino-v1';
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S.st))}catch(e){}}
+var S={tab:'flash',ex:'scr',cat:'all',op:null,rev:false,qt:'mix',q:null,ans:-1,ver:null,vs:{},mast:false,st:load(),qs:{ok:0,tot:0}};
+if(!S.st.scr)S.st.scr={ok:0,tot:0};
+try{var lt=localStorage.getItem(KEY+'-tab');if(lt)S.tab=lt}catch(e){}
+
+/* ============ PAGINE ============ */
+function codesList(keys){return '<ul class="codes">'+keys.map(function(k){return '<li><code>'+collShort(k).replace('SP attivo ','SP att. ').replace('SP passivo ','SP pass. ')+'</code><span>'+A[k].n+'</span></li>'}).join('')+'</ul>'}
+function pageFlash(){
+ return '<h2>Concetti chiave</h2><p class="lead">Tutto quello che serve, in una pagina. Se hai 10 minuti, leggi solo questa.</p><div class="stack">'+
+ '<div class="card"><h3>1. La variazione si trova da sola</h3><div class="vg"><div class="h"></div><div class="h">Dare</div><div class="h">Avere</div>'+
+ '<div class="h">Finanziario</div><div class="dd">VFA</div><div class="aa">VFP</div><div class="h">Economico</div><div class="dd">VEN</div><div class="aa">VEP</div></div>'+
+ '<p>Finanziario = soldi, crediti, debiti. Economico = costi, ricavi, beni strumentali, fondi di rettifica, capitale. Ogni scrittura: totale Dare = totale Avere.</p></div>'+
+ '<div class="card"><h3>2. Pagamenti e incassi</h3><ul><li>Paghi un fornitore: <b>Debiti v/fornitori in Dare</b>, il mezzo in Avere.</li><li>Incassi da un cliente: <b>Crediti v/clienti in Avere</b>, il mezzo in Dare.</li></ul>'+
+ '<ul class="codes"><li><code>C.IV.3</code><span>Contanti → Denaro in cassa</span></li><li><code>C.IV.1</code><span>Bonifico o assegno <b>emesso</b> → Banca X c/c</span></li><li><code>C.IV.2</code><span>Assegno <b>ricevuto</b> → Cassa assegni</span></li><li><code>C.III.6</code><span>Cambiale ricevuta → Cambiali attive (versione del prof; codice: C.II.1)</span></li><li><code>D.8</code><span>Cambiale emessa o tratta accettata → Cambiali passive</span></li></ul></div>'+
+ '<div class="card"><h3>3. Beni strumentali</h3><ul><li>Acquisto: bene in Dare (E, VEN) + IVA a credito / Debiti v/fornitori. Va nello SP in <code>B.II</code>.</li><li>Ammortamento: quota = costo storico × %. Ammortamento <code>CE B.10.b</code> / Fondo ammortamento (si sottrae dal bene).</li><li>Cessione: valore contabile = costo − fondo. Prezzo maggiore → <b>plusvalenza</b> <code>A.5</code>; minore → <b>minusvalenza</b> <code>B.14</code>.</li><li>Tre scritture: cessione, storno del fondo, plus/minusvalenza. Il conto Macchinari deve tornare a zero.</li></ul></div>'+
+ '<div class="card"><h3>4. Crediti e insoluti</h3><ul><li>Non paga: <b>Crediti insoluti D / Crediti v/clienti A</b> (resta in <code>C.II.1</code>).</li><li>Paga in ritardo: Banca D / Crediti insoluti A + Interessi attivi da clienti A (<code>C.16.d</code>).</li><li>Non pagherà mai: prima <b>Fondo svalutazione crediti</b> in Dare, il resto in <b>Perdite su crediti</b> (<code>B.14</code>).</li><li>31/12: Svalutazione crediti (<code>B.10.d</code>) D / Fondo svalutazione crediti A.</li><li>Incassi un credito già dato per perso: Sopravvenienze attive (<code>A.5</code>).</li></ul></div>'+
+ '<div class="card"><h3>5. Personale e TFR</h3><ul><li>Lordo − contributi dipendente (9,19%) − IRPEF = netto.</li><li>Salari e stipendi D (lordo) / Debiti v/istituti previdenziali A + Erario c/ritenute A + Personale c/retribuzioni A (netto).</li><li>Oneri sociali (azienda, ~30%) D / Debiti v/istituti previdenziali A.</li><li>F24 entro il 16: chiudi i due debiti con la banca.</li><li>TFR 31/12: TFR (<code>B.9.c</code>) D / Debiti per TFR (<code>passivo C</code>) A. Quota = retribuzioni ÷ 13,5.</li></ul></div>'+
+ '<div class="card"><h3>6. Il bilancio</h3><ul><li>SP + CE + rendiconto finanziario + nota integrativa (art. 2423): chiaro, veritiero e corretto.</li><li>SP (2424) a sezioni contrapposte. Attivo: A crediti v/soci, B immobilizzazioni, C attivo circolante, D ratei e risconti. Passivo: A PN, B fondi rischi e oneri, C TFR, D debiti, E ratei e risconti.</li><li>CE (2425) scalare: A valore produzione, B costi produzione, C finanziari, D rettifiche, 20 imposte, 21 utile.</li><li>Abbreviato (2435-bis): non superare 2 su 3 tra attivo 5,5 mln, ricavi 11 mln, 50 dipendenti. Niente rendiconto finanziario.</li><li>Fondo ammortamento e fondo svalutazione crediti <b>non</b> vanno nel passivo: si sottraggono.</li><li>Movimenti delle immobilizzazioni: nota integrativa (2427 n. 2).</li></ul></div>'+
+ '<div class="card"><h3>7. Codici da sapere</h3>'+codesList(['merciAcq','merciVen','ivaCred','ivaDeb','crediti','debiti','banca','assegni','cassa','macchinari','amm','plus','minus','insoluti','sval','perdite','intAtt','salari','oneri','tfr','debTfr','debPrev','erario','personale','azionisti','capitale'])+'</div>'+
+ '<div class="card"><h3>8. Errori nei materiali</h3><ul><li>PDF, vendita: Crediti v/clienti è <b>finanziario</b>, non economico.</li><li>PDF, minusvalenza: Macchinari va in <b>Avere</b>, non in Dare.</li><li>App insoluti: manda tutto in Perdite su crediti; se c’è il fondo, si usa prima il fondo.</li><li>Foglio del prof: Cambiali attive in C.III.6. Per il codice è C.II.1, ma corregge lui.</li></ul></div>'+
+ '</div>'}
+
+var TEORIA=[
+ {id:'base',t:'Le regole della partita doppia',s:'Variazioni, libro giornale, mastrini',h:function(){return ''+
+  '<p>Ogni operazione tocca almeno due conti e la scrittura quadra sempre: totale Dare = totale Avere.</p>'+
+  '<div class="vg"><div class="h"></div><div class="h">Dare</div><div class="h">Avere</div><div class="h">Finanziario</div><div class="dd">VFA</div><div class="aa">VFP</div><div class="h">Economico</div><div class="dd">VEN</div><div class="aa">VEP</div></div>'+
+  '<p class="key">La variazione dipende solo da due cose: il tipo del conto e il lato. Conto finanziario in Dare? VFA. Non serve altro.</p>'+
+  '<h4>Cosa significano</h4><ul><li><b>VFA</b>, variazione finanziaria attiva: entrano soldi o crediti, oppure si chiude un debito.</li><li><b>VFP</b>, variazione finanziaria passiva: escono soldi o crediti, oppure nasce un debito.</li><li><b>VEN</b>, variazione economica negativa: un costo, compreso il bene strumentale (costo che dura più anni).</li><li><b>VEP</b>, variazione economica positiva: un ricavo, una rettifica di costo (il fondo ammortamento), il capitale.</li></ul>'+
+  '<h4>Libro giornale e mastrini</h4><ul><li><b>Libro giornale</b>: tutte le scritture in ordine di data. Colonne: data, conti, descrizione, Dare, Avere, variazione.</li><li><b>Mastrino</b>: un “T” per ogni conto, Dare a sinistra e Avere a destra. Ci riporti gli importi del giornale; il <b>saldo</b> è la differenza tra i due lati, scritto dal lato più piccolo per pareggiare.</li></ul>'+
+  '<p class="tip">In verifica: se non si capisce se i 15 punti sono della stessa azienda, trattali come una sola e scrivilo in cima ("Ipotesi: tutte operazioni della stessa azienda"). Così i mastrini hanno senso.</p>'}},
+ {id:'av',t:'Acquisti, vendite e regolamento',s:'Fatture, pagamenti, incassi, cambiali e assegni',h:function(){return ''+
+  sch([['merciAcq','D'],['ivaCred','D'],['debiti','A']],'Acquisto di merci')+sch([['crediti','D'],['merciVen','A'],['ivaDeb','A']],'Vendita di merci')+
+  '<p>IVA 22% = imponibile × 0,22. Totale fattura = imponibile × 1,22.</p>'+
+  '<h4>Pagare un fornitore</h4><p>Debiti v/fornitori va <b>sempre in Dare</b>; in Avere va il mezzo.</p>'+
+  '<div class="tw-x"><table class="mt"><tr><th>Come paghi</th><th>Conto in Avere</th><th>Bilancio</th></tr>'+
+  '<tr><td>Contanti</td><td>Denaro in cassa</td><td><code>C.IV.3</code></td></tr><tr><td>Bonifico</td><td>Banca X c/c</td><td><code>C.IV.1</code></td></tr><tr><td>Emetti un assegno bancario</td><td>Banca X c/c</td><td><code>C.IV.1</code></td></tr>'+
+  '<tr><td>Emetti un pagherò / accetti una tratta</td><td>Cambiali passive</td><td><code>D.8</code></td></tr><tr><td>Giri una cambiale ricevuta</td><td>Cambiali attive</td><td><code>C.III.6</code>*</td></tr><tr><td>Giri un assegno ricevuto</td><td>Cassa assegni</td><td><code>C.IV.2</code></td></tr></table></div>'+
+  '<h4>Incassare da un cliente</h4><p>Crediti v/clienti va <b>sempre in Avere</b>; in Dare va il mezzo.</p>'+
+  '<div class="tw-x"><table class="mt"><tr><th>Come incassi</th><th>Conto in Dare</th><th>Bilancio</th></tr>'+
+  '<tr><td>Contanti</td><td>Denaro in cassa</td><td><code>C.IV.3</code></td></tr><tr><td>Bonifico</td><td>Banca X c/c</td><td><code>C.IV.1</code></td></tr><tr><td>Assegno bancario o circolare</td><td>Cassa assegni</td><td><code>C.IV.2</code></td></tr><tr><td>Pagherò o tratta del cliente</td><td>Cambiali attive</td><td><code>C.III.6</code>*</td></tr></table></div>'+
+  '<p class="warn">* Cambiali attive: il foglio del prof dice C.III.6 "altri titoli". Per il codice civile e i manuali sono C.II.1 Crediti verso clienti. In verifica usa la sua versione: è lui che corregge.</p>'+
+  '<p class="tip">Trappola: l’assegno che <b>emetti</b> tu è Banca X c/c, perché i soldi escono dal conto. Cassa assegni è solo per gli assegni che <b>ricevi</b>.</p>'}},
+ {id:'ben',t:'Beni strumentali',s:'Acquisto, ammortamento, cessione, nota integrativa',h:function(){return ''+
+  sch([['macchinari','D'],['ivaCred','D'],['debiti','A']],'Acquisto')+
+  '<p>Il bene è un conto <b>economico</b> (VEN): è un costo che si “spalma” su più anni. In bilancio però va nello <b>SP</b>, tra le immobilizzazioni materiali:</p>'+
+  '<ul class="codes"><li><code>B.II.1</code><span>Terreni e fabbricati</span></li><li><code>B.II.2</code><span>Impianti e macchinario</span></li><li><code>B.II.3</code><span>Attrezzature industriali e commerciali</span></li><li><code>B.II.4</code><span>Altri beni: automezzi, mobili, macchine d’ufficio</span></li><li><code>B.I</code><span>Immateriali: brevetti (B.I.3), marchi (B.I.4), avviamento (B.I.5)</span></li></ul>'+
+  sch([['amm','D'],['fondoAmm','A']],'Ammortamento (31/12)')+
+  '<p>Quota = costo storico × aliquota. Esempio: 20.000 × 15% = 3.000.</p><p>Il fondo ammortamento <b>non</b> va nel passivo: nello SP il bene compare al netto (costo − fondo).</p>'+
+  '<h4>Cessione di un bene in parte ammortizzato</h4><ol><li>Valore contabile = costo storico − fondo ammortamento.</li><li>Prezzo − valore contabile: positivo = <b>plusvalenza</b> (CE A.5), negativo = <b>minusvalenza</b> (CE B.14).</li></ol>'+
+  '<p>Esempio del PDF: 20.000 − 16.000 = 4.000. Venduto a 5.000: plusvalenza di 1.000.</p>'+
+  sch([['debitori','D'],['macchinari','A'],['ivaDeb','A']],'1 · Cessione (al prezzo di vendita)')+sch([['fondoAmm','D'],['macchinari','A']],'2 · Storno del fondo')+
+  sch([['macchinari','D'],['plus','A']],'3a · Se plusvalenza')+sch([['minus','D'],['macchinari','A']],'3b · Se minusvalenza')+
+  '<p class="warn">Il PDF del prof di sostegno, nella minusvalenza, mette anche Macchinari in Dare: è sbagliato, la scrittura non quadrerebbe. Con la minusvalenza Macchinari va in <b>Avere</b>. Controllo: dopo le 3 scritture il conto Macchinari fa zero.</p>'+
+  '<h4>Nota integrativa (art. 2427 n. 2)</h4><p>Per ogni immobilizzazione si mostrano i movimenti dell’anno. Esempio:</p>'+
+  '<div class="tw-x"><table class="mt"><tr><td>Costo storico a inizio anno</td><td class="n">50.000</td></tr><tr><td>Fondo ammortamento a inizio anno</td><td class="n">−20.000</td></tr><tr class="sum"><td>Valore a inizio anno</td><td class="n">30.000</td></tr><tr><td>+ Acquisti</td><td class="n">10.000</td></tr><tr><td>− Cessioni (valore contabile)</td><td class="n">−4.000</td></tr><tr><td>− Ammortamento dell’anno</td><td class="n">−7.500</td></tr><tr class="sum"><td>Valore a fine anno, va nello SP</td><td class="n">28.500</td></tr></table></div>'}},
+ {id:'cred',t:'Crediti, insoluti e fondo',s:'Insoluti, perdite, fondo svalutazione, sopravvenienze',h:function(){return ''+
+  sch([['insoluti','D'],['crediti','A']],'1 · Il cliente non paga alla scadenza')+
+  '<p>È un giroconto: il credito c’è ancora e in bilancio resta in <code>C.II.1</code>. Cambia solo il nome del conto, per evidenziarlo.</p>'+
+  sch([['banca','D'],['intAtt','A'],['insoluti','A']],'2a · Paga in ritardo, con interessi di mora')+
+  sch([['perdite','D'],['insoluti','A']],'2b · Non pagherà mai, non c’è il fondo')+
+  sch([['fsc','D'],['perdite','D'],['insoluti','A']],'2c · Non pagherà mai, c’è il fondo')+
+  '<p>Prima si usa il fondo; solo la parte che il fondo non copre va in Perdite su crediti. Esempio: insoluto 8.000, fondo 5.000 → Fondo 5.000 e Perdite 3.000 in Dare, Crediti insoluti 8.000 in Avere.</p>'+
+  '<p class="tip">Molti libri precisano che il fondo copre i crediti degli anni passati. Se il credito perso è nato quest’anno, va direttamente in Perdite su crediti.</p>'+
+  sch([['sval','D'],['fsc','A']],'3 · Accantonamento al fondo (31/12)')+
+  '<p>Si stima la parte dei crediti che non verrà incassata (es. 2% dei crediti). Svalutazione crediti è un costo in <code>CE B.10.d</code>. Il fondo si sottrae dai crediti: in bilancio i crediti valgono quanto pensi di incassare.</p>'+
+  '<p class="warn">Il prof lo chiama "fondo rischi su crediti": è lo stesso conto. Non confonderlo con i Fondi per rischi e oneri del passivo B.</p>'+
+  '<h4>4 · Sopravvenienze</h4><ul><li><b>Attive</b> (<code>CE A.5</code>): un ricavo inatteso legato al passato. Es. incassi un credito che avevi già eliminato come perso.</li><li><b>Passive</b> (<code>CE B.14</code>): un costo o una perdita inattesa legata al passato.</li></ul>'+
+  sch([['banca','D'],['soprAtt','A']],'Incasso di un credito già eliminato')+
+  '<p class="tip">Dal 2016 nel CE non esiste più la sezione E dei componenti straordinari: sopravvenienze, plusvalenze e minusvalenze stanno in A.5 e B.14.</p>'}},
+ {id:'pers',t:'Personale e TFR',s:'Stipendi, contributi, F24, TFR',h:function(){return ''+
+  '<p><b>Lordo</b> − contributi a carico del dipendente (INPS, 9,19%) − ritenute IRPEF = <b>netto</b> in busta paga.</p>'+
+  sch([['salari','D'],['debPrev','A'],['erario','A'],['personale','A']],'1 · Liquidazione degli stipendi (fine mese)')+
+  sch([['oneri','D'],['debPrev','A']],'2 · Contributi a carico dell’azienda (circa 30% del lordo)')+
+  sch([['personale','D'],['banca','A']],'3 · Pagamento del netto')+
+  sch([['debPrev','D'],['erario','D'],['banca','A']],'4 · Versamento con F24 (entro il 16 del mese dopo)')+
+  '<p>Debiti v/istituti previdenziali raccoglie entrambi i contributi, quelli del dipendente e quelli dell’azienda.</p>'+
+  sch([['tfr','D'],['debTfr','A']],'TFR · Accantonamento (31/12)')+
+  '<p>Quota annua = retribuzioni annue lorde ÷ 13,5. Esempio: 135.000 ÷ 13,5 = 10.000.</p>'+
+  '<p class="tip">Se il prof chiede la rivalutazione: il TFR già accumulato si rivaluta ogni anno dell’1,5% fisso + 75% dell’inflazione ISTAT, con un’imposta sostitutiva del 17% sulla rivalutazione.</p>'+
+  sch([['debTfr','D'],['erario','A'],['personaleLiq','A']],'TFR · Liquidazione al dipendente che lascia')+sch([['personaleLiq','D'],['banca','A']],'TFR · Pagamento')}},
+ {id:'bil',t:'Il bilancio d’esercizio',s:'Art. 2423, schemi 2424 e 2425, abbreviato, nota integrativa',h:function(){return ''+
+  '<h4>I documenti (art. 2423)</h4><p>Stato patrimoniale, conto economico, rendiconto finanziario e nota integrativa. Il bilancio deve rappresentare in modo <b>chiaro, veritiero e corretto</b> la situazione patrimoniale e finanziaria e il risultato economico. La relazione sulla gestione lo accompagna ma non ne fa parte.</p>'+
+  '<p>Come si leggono i codici: lettera maiuscola (macroclasse) → numero romano (classe) → numero arabo (voce) → lettera minuscola (sottovoce). Es. <code>C.II.1</code>, <code>B.9.a</code>.</p>'+
+  '<h4>Stato patrimoniale (art. 2424), a sezioni contrapposte</h4><div class="schema">'+
+  '<div class="L">ATTIVO</div><div class="L">A) Crediti verso soci per versamenti ancora dovuti</div><div class="L">B) Immobilizzazioni</div>'+
+  '<div class="S">I Immateriali <span>1 costi di impianto e ampliamento · 2 costi di sviluppo · 3 brevetti e opere dell’ingegno · 4 concessioni, licenze, marchi · 5 avviamento · 6 in corso e acconti · 7 altre</span></div>'+
+  '<div class="S">II Materiali <span>1 terreni e fabbricati · 2 impianti e macchinario · 3 attrezzature industriali e commerciali · 4 altri beni · 5 in corso e acconti</span></div>'+
+  '<div class="S">III Finanziarie <span>1 partecipazioni · 2 crediti · 3 altri titoli · 4 strumenti finanziari derivati attivi</span></div>'+
+  '<div class="L">C) Attivo circolante</div><div class="S">I Rimanenze <span>1 materie prime, sussidiarie e di consumo · 2 prodotti in corso di lavorazione e semilavorati · 3 lavori in corso su ordinazione · 4 prodotti finiti e merci · 5 acconti</span></div>'+
+  '<div class="S">II Crediti <span>1 verso clienti · 2 controllate · 3 collegate · 4 controllanti · 5 sottoposte al controllo delle controllanti · 5-bis crediti tributari · 5-ter imposte anticipate · 5-quater verso altri</span></div>'+
+  '<div class="S">III Attività finanziarie non immobilizzate <span>1-4 partecipazioni · 5 derivati attivi · 6 altri titoli · 7 gestione accentrata della tesoreria</span></div>'+
+  '<div class="S">IV Disponibilità liquide <span>1 depositi bancari e postali · 2 assegni · 3 danaro e valori in cassa</span></div><div class="L">D) Ratei e risconti</div>'+
+  '<div class="L" style="margin-top:14px">PASSIVO</div><div class="L">A) Patrimonio netto</div><div class="S"><span>I capitale · II riserva da sovrapprezzo azioni · III riserve di rivalutazione · IV riserva legale · V riserve statutarie · VI altre riserve · VII riserva copertura flussi finanziari attesi · VIII utili (perdite) portati a nuovo · IX utile (perdita) dell’esercizio · X riserva negativa azioni proprie</span></div>'+
+  '<div class="L">B) Fondi per rischi e oneri</div><div class="S"><span>1 trattamento di quiescenza · 2 imposte, anche differite · 3 derivati passivi · 4 altri</span></div>'+
+  '<div class="L">C) Trattamento di fine rapporto di lavoro subordinato</div>'+
+  '<div class="L">D) Debiti <span class="small">(indicando a parte quelli esigibili oltre l’esercizio successivo)</span></div><div class="S"><span>1 obbligazioni · 2 obbligazioni convertibili · 3 verso soci per finanziamenti · 4 verso banche · 5 verso altri finanziatori · 6 acconti · 7 verso fornitori · 8 rappresentati da titoli di credito · 9 controllate · 10 collegate · 11 controllanti · 11-bis sottoposte al controllo delle controllanti · 12 tributari · 13 verso istituti di previdenza e sicurezza sociale · 14 altri debiti</span></div><div class="L">E) Ratei e risconti</div></div>'+
+  '<h4>Conto economico (art. 2425), in forma scalare</h4><div class="schema">'+
+  '<div class="L">A) Valore della produzione</div><div class="S"><span>1 ricavi delle vendite e delle prestazioni · 2 variazioni rimanenze di prodotti · 3 variazioni lavori in corso su ordinazione · 4 incrementi di immobilizzazioni per lavori interni · 5 altri ricavi e proventi</span></div>'+
+  '<div class="L">B) Costi della produzione</div><div class="S"><span>6 materie prime, sussidiarie, di consumo e merci · 7 servizi · 8 godimento di beni di terzi · 9 personale (a salari e stipendi, b oneri sociali, c TFR, d quiescenza, e altri costi) · 10 ammortamenti e svalutazioni (a immateriali, b materiali, c altre svalutazioni delle immobilizzazioni, d svalutazione dei crediti) · 11 variazioni rimanenze di materie e merci · 12 accantonamenti per rischi · 13 altri accantonamenti · 14 oneri diversi di gestione</span></div>'+
+  '<div class="L">Differenza A − B</div><div class="L">C) Proventi e oneri finanziari</div><div class="S"><span>15 proventi da partecipazioni · 16 altri proventi finanziari (d = proventi diversi, es. interessi di mora) · 17 interessi e altri oneri finanziari · 17-bis utili e perdite su cambi</span></div>'+
+  '<div class="L">D) Rettifiche di valore di attività e passività finanziarie</div><div class="S"><span>18 rivalutazioni · 19 svalutazioni</span></div>'+
+  '<div class="L">Risultato prima delle imposte · 20 Imposte sul reddito · 21 Utile (perdita) dell’esercizio</div></div>'+
+  '<h4>Bilancio in forma abbreviata (art. 2435-bis)</h4><p>Lo può fare chi non ha titoli quotati e, nel primo esercizio o per due esercizi di fila, non supera <b>2 di questi 3 limiti</b>:</p>'+
+  '<div class="tw-x"><table class="mt"><tr><th></th><th>In vigore (dal 2024)</th><th>Prima</th></tr><tr><td>Totale attivo SP</td><td class="n">5.500.000</td><td class="n">4.400.000</td></tr><tr><td>Ricavi delle vendite</td><td class="n">11.000.000</td><td class="n">8.800.000</td></tr><tr><td>Dipendenti medi</td><td class="n">50</td><td class="n">50</td></tr></table></div>'+
+  '<p>Semplificazioni: SP con solo lettere maiuscole e numeri romani; CE con alcune voci raggruppate; niente rendiconto finanziario; nota integrativa ridotta; relazione sulla gestione omettibile se le informazioni sulle azioni proprie sono in nota integrativa.</p>'+
+  '<p class="tip">Se il tuo libro riporta 4.400.000 e 8.800.000, sono i limiti vecchi: il prof probabilmente userà quelli del libro.</p>'+
+  '<h4>Micro-imprese (art. 2435-ter)</h4><p>Limiti: attivo 220.000, ricavi 440.000, 5 dipendenti (prima 175.000 e 350.000). Schemi come l’abbreviato, esonero da rendiconto finanziario, nota integrativa (se in calce allo SP ci sono garanzie, impegni e compensi agli amministratori) e relazione sulla gestione.</p>'+
+  '<h4>Valori al netto</h4><p>Fondo ammortamento e fondo svalutazione crediti non compaiono come voci: si sottraggono dal bene e dai crediti. Nello SP leggi il valore netto; il dettaglio va in nota integrativa.</p>'+
+  '<h4>Crediti verso soci (azionisti)</h4>'+sch([['azionisti','D'],['capitale','A']],'Sottoscrizione del capitale')+sch([['banca','D'],['azionisti','A']],'Versamento')+
+  '<p>La parte sottoscritta ma non versata resta nell’attivo <code>A</code>. Il capitale va nel passivo <code>A.I</code>.</p>'}}
+];
+function pageTeoria(){var h='<h2>Teoria</h2><p class="lead">Una scheda per argomento. Le scritture usano il formato del prof: conto, Dare/Avere, F/E, variazione, collocazione.</p><div class="stack">';
+ TEORIA.forEach(function(t,i){h+='<details class="acc" id="t-'+t.id+'"'+(S.open===t.id?' open':'')+'><summary><span>'+t.t+'<small>'+t.s+'</small></span></summary><div class="accb">'+t.h()+'</div></details>'});
+ return h+'</div>'}
+
+function chips(map,cur,act){return '<div class="chips">'+Object.keys(map).map(function(k){return '<button class="chip" data-act="'+act+'" data-v="'+k+'" aria-pressed="'+(k===cur)+'">'+map[k]+'</button>'}).join('')+'</div>'}
+function pageEs(){var h='<h2>Esercizi</h2><div class="seg" role="group"><button data-act="ex" data-v="scr" aria-pressed="'+(S.ex==='scr')+'">Scritture</button><button data-act="ex" data-v="quiz" aria-pressed="'+(S.ex==='quiz')+'">Quiz lampo</button><button data-act="ex" data-v="ver" aria-pressed="'+(S.ex==='ver')+'">Verifica simulata</button></div>';
+ if(S.ex==='scr'){if(!S.op)S.op=genOp(S.cat);var op=S.op;var cm={all:'Tutto'};Object.keys(CAT).forEach(function(k){cm[k]=CAT[k]});
+  h+=chips(cm,S.cat,'cat')+'<div class="card"><div class="meta"><span class="badge">'+CAT[op.cat]+'</span><span class="score">giuste '+S.st.scr.ok+'/'+S.st.scr.tot+'</span></div><h3>'+op.t+'</h3><p class="qtext">'+op.q+'</p>';
+  if(!S.rev)h+='<p class="small">Scrivila su carta come in verifica: conti, Dare/Avere, importi, F/E, variazione, collocazione. Poi controlla.</p><div class="btns"><button class="btn pri" data-act="rev">Mostra soluzione</button><button class="btn" data-act="next">Un’altra</button></div>';
+  else h+=entriesHTML(op)+'<div class="btns"><button class="btn okb" data-act="self" data-v="1">L’avevo giusta</button><button class="btn kob" data-act="self" data-v="0">Avevo sbagliato</button><button class="btn" data-act="next">Salta</button></div>';
+  h+='</div>'}
+ if(S.ex==='quiz'){if(!S.q)S.q=genQ(S.qt);var q=S.q;
+  h+=chips(QT,S.qt,'qt')+'<div class="card"><div class="meta"><span class="badge">'+QT[S.qt]+'</span><span class="score">'+S.qs.ok+'/'+S.qs.tot+'</span></div><p class="qtext">'+q.q+'</p><div class="opts">';
+  q.o.forEach(function(o,i){var c='';if(S.ans>=0){if(o.ok)c=' good';else if(i===S.ans)c=' bad'}h+='<button class="opt'+c+'" data-act="ans" data-v="'+i+'"'+(S.ans>=0?' disabled':'')+'>'+o.t+'</button>'});
+  h+='</div>';if(S.ans>=0){var ok=q.o[S.ans].ok;h+='<div class="fb '+(ok?'ok':'ko')+'"><b>'+(ok?'Giusto.':'No.')+'</b>'+(q.x||'')+'</div>'+(q.xh?'<div class="small" style="margin-top:8px">Scrittura completa:</div>'+q.xh:'')+'<div class="btns"><button class="btn pri" data-act="nq">Prossima</button></div>'}
+  h+='</div>'}
+ if(S.ex==='ver'){if(!S.ver){h+='<div class="card"><h3>Come la verifica del prof</h3><p>15 operazioni di fila, da registrare a libro giornale con variazione e collocazione, poi i mastrini. Fallo su carta, a tempo, e confronta alla fine.</p><div class="btns"><button class="btn pri" data-act="nv">Genera una verifica</button></div></div>';return h}
+  h+='<div class="card"><div class="meta"><h3 style="margin:0">La Alfa spa compie queste operazioni:</h3></div>';
+  S.ver.forEach(function(op,i){h+='<div class="vitem"><p><span class="vnum">'+(i+1)+')</span>'+op.q+'</p>'+(S.vs[i]?entriesHTML(op):'')+'<div class="btns" style="margin-top:6px"><button class="btn sm" data-act="vt" data-v="'+i+'">'+(S.vs[i]?'Nascondi':'Soluzione')+'</button></div></div>'});
+  h+='<div class="btns"><button class="btn" data-act="va">Mostra tutte le soluzioni</button><button class="btn" data-act="vm">'+(S.mast?'Nascondi i mastrini':'Mostra i mastrini')+'</button><button class="btn pri" data-act="nv">Nuova verifica</button></div></div>';
+  if(S.mast)h+='<h4>Mastrini</h4><p class="small">Il numero a sinistra è l’operazione da cui viene l’importo.</p>'+mastriniHTML(S.ver)}
+ return h}
+function pageConti(){var h='<h2>Conti e collocazione</h2><p class="lead">Ogni conto con tipo e voce di bilancio. Cerca per nome o per codice.</p><input class="search" id="q" type="search" placeholder="Es. assegni, B.9, fondo…" value="'+(S.cq||'').replace(/"/g,'')+'"><div id="clist">'+contiList(S.cq||'')+'</div>';return h}
+function contiList(f){f=f.toLowerCase().trim();var groups={};Object.keys(A).forEach(function(k){var a=A[k];var hay=(a.n+' '+a.code+' '+a.voce+' '+collShort(k)).toLowerCase();if(f&&hay.indexOf(f)<0)return;(groups[a.g]=groups[a.g]||[]).push(k)});
+ var h='';Object.keys(groups).forEach(function(g){h+='<div class="grp">'+g+'</div><div class="clist">';groups[g].forEach(function(k){var a=A[k];
+  h+='<div class="citem"><div class="cn">'+a.n+'</div><div class="cm"><span class="tg">'+(a.t==='F'?'F · Dare VFA / Avere VFP':'E · Dare VEN / Avere VEP')+'</span><span>'+a.sp+' '+(a.sp==='SP'?(a.pass?'passivo ':'attivo '):'')+'<code>'+a.code+'</code> '+a.voce+'</span></div>'+(a.note?'<div class="cnote">'+a.note+'</div>':'')+'</div>'});h+='</div>'});
+ return h||'<p class="small">Nessun conto trovato.</p>'}
+
+function render(){var m=$('#main');var p={flash:pageFlash,teoria:pageTeoria,es:pageEs,conti:pageConti}[S.tab]||pageFlash;m.innerHTML=p();
+ document.querySelectorAll('.tab').forEach(function(b){b.setAttribute('aria-current',String(b.getAttribute('data-tab')===S.tab))})}
+
+document.addEventListener('click',function(ev){var t=ev.target.closest('[data-tab],[data-act]');if(!t)return;
+ if(t.hasAttribute('data-tab')){S.tab=t.getAttribute('data-tab');try{localStorage.setItem(KEY+'-tab',S.tab)}catch(e){}render();window.scrollTo(0,0);return}
+ var a=t.getAttribute('data-act'),v=t.getAttribute('data-v');var top=false;
+ if(a==='ex'){S.ex=v;top=true}
+ else if(a==='cat'){S.cat=v;S.op=genOp(v);S.rev=false}
+ else if(a==='rev'){S.rev=true}
+ else if(a==='next'){S.op=genOp(S.cat);S.rev=false;top=true}
+ else if(a==='self'){S.st.scr.tot++;if(v==='1')S.st.scr.ok++;save();S.op=genOp(S.cat);S.rev=false;top=true}
+ else if(a==='qt'){S.qt=v;S.q=genQ(v);S.ans=-1}
+ else if(a==='ans'){if(S.ans<0){S.ans=+v;S.qs.tot++;if(S.q.o[S.ans].ok)S.qs.ok++}}
+ else if(a==='nq'){S.q=genQ(S.qt);S.ans=-1;top=true}
+ else if(a==='nv'){S.ver=genVer();S.vs={};S.mast=false;top=true}
+ else if(a==='vt'){S.vs[v]=!S.vs[v]}
+ else if(a==='va'){var all=S.ver.every(function(_,i){return S.vs[i]});S.ver.forEach(function(_,i){S.vs[i]=!all})}
+ else if(a==='vm'){S.mast=!S.mast}
+ var y=window.scrollY;render();if(top)window.scrollTo(0,0);else window.scrollTo(0,y)});
+document.addEventListener('toggle',function(ev){var d=ev.target;if(d.classList&&d.classList.contains('acc')&&d.open){S.open=d.id.slice(2)}},true);
+document.addEventListener('input',function(ev){if(ev.target.id==='q'){S.cq=ev.target.value;$('#clist').innerHTML=contiList(S.cq)}});
+
+render();
+if(document.querySelector('link[rel="manifest"]')&&'serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
+window.__mastrino={A:A,G:G,GEN:GEN,genQ:genQ,genVer:genVer,varOf:varOf};
+})();
+</script>
+
+</body>
+</html>
